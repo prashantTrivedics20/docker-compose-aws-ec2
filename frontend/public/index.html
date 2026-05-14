@@ -297,7 +297,10 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:5000';
+        // Use current host's IP with backend port
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000' 
+            : `http://${window.location.hostname}:5000`;
 
         // Check system health
         async function checkHealth() {
