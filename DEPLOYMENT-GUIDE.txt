@@ -1,0 +1,228 @@
+========================================
+AWS EC2 DEPLOYMENT GUIDE
+========================================
+
+STEP 1: LAUNCH EC2 INSTANCE
+----------------------------
+1. Go to AWS Console → EC2 → Launch Instance
+
+2. Choose AMI:
+   - Amazon Linux 2023 (recommended)
+   - OR Ubuntu Server 22.04 LTS
+
+3. Choose Instance Type:
+   - t2.medium (recommended for production)
+   - t2.micro (for testing, free tier eligible)
+
+4. Configure Security Group:
+   Add these Inbound Rules:
+   
+   Type            Protocol    Port Range    Source
+   ------------------------------------------------
+   SSH             TCP         22            Your IP (for security)
+   Custom TCP      TCP         3000          0.0.0.0/0 (Frontend)
+   Custom TCP      TCP         5000          0.0.0.0/0 (Backend API)
+   
+   Optional (for direct database access):
+   Custom TCP      TCP         27017         Your IP (MongoDB)
+   Custom TCP      TCP         6379          Your IP (Redis)
+
+5. Create or select a Key Pair (.pem file)
+   - Download and save it securely
+   - You'll need this to SSH into the instance
+
+6. Launch Instance
+
+
+STEP 2: CONNECT TO EC2
+-----------------------
+1. Get your EC2 Public IP from AWS Console
+
+2. Set key permissions (on your local machine):
+   
+   Windows (PowerShell):
+   icacls "your-key.pem" /inheritance:r
+   icacls "your-key.pem" /grant:r "%username%:R"
+   
+   Linux/Mac:
+   chmod 400 your-key.pem
+
+3. Connect via SSH:
+   
+   For Amazon Linux:
+   ssh -i your-key.pem ec2-user@YOUR_EC2_PUBLIC_IP
+   
+   For Ubuntu:
+   ssh -i your-key.pem ubuntu@YOUR_EC2_PUBLIC_IP
+
+
+STEP 3: UPLOAD PROJECT FILES
+-----------------------------
+Option A: Using SCP (from your local machine)
+
+For Amazon Linux:
+scp -i your-key.pem -r * ec2-user@YOUR_EC2_PUBLIC_IP:~/app/
+
+For Ubuntu:
+scp -i your-key.pem -r * ubuntu@YOUR_EC2_PUBLIC_IP:~/app/
+
+
+Option B: Using Git
+ssh into EC2, then:
+git clone YOUR_REPOSITORY_URL app
+cd app
+
+
+STEP 4: RUN DEPLOYMENT SCRIPT
+------------------------------
+SSH into your EC2 instance, then:
+
+cd ~/app
+
+For Amazon Linux:
+chmod +x deploy-ec2.sh
+./deploy-ec2.sh
+
+For Ubuntu:
+chmod +x deploy-ubuntu.sh
+./deploy-ubuntu.sh
+
+
+STEP 5: LOGOUT AND LOGIN
+-------------------------
+After the script completes:
+
+exit
+
+Then SSH back in:
+ssh -i your-key.pem ec2-user@YOUR_EC2_PUBLIC_IP
+
+
+STEP 6: START THE APPLICATION
+------------------------------
+cd ~/app
+docker-compose up -d
+
+
+STEP 7: VERIFY DEPLOYMENT
+--------------------------
+Check container status:
+docker-compose ps
+
+View logs:
+docker-compose logs -f
+
+Check health:
+curl http://localhost:5000/health
+
+
+STEP 8: ACCESS YOUR APPLICATION
+--------------------------------
+Open in browser:
+http://YOUR_EC2_PUBLIC_IP:3000
+
+Test API:
+http://YOUR_EC2_PUBLIC_IP:5000/health
+
+
+USEFUL COMMANDS
+---------------
+# View running containers
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Restart services
+docker-compose restart
+
+# Stop services
+docker-compose down
+
+# Start services
+docker-compose up -d
+
+# Rebuild and start
+docker-compose up -d --build
+
+# Check MongoDB data
+docker exec mongodb mongosh myapp --eval "db.users.find().pretty()"
+
+# Check Redis data
+docker exec redis redis-cli KEYS "*"
+
+# Check volumes
+docker volume ls
+
+
+TROUBLESHOOTING
+---------------
+1. If containers won't start:
+   - Check logs: docker-compose logs
+   - Check disk space: df -h
+   - Check memory: free -h
+
+2. If can't access from browser:
+   - Verify Security Group rules in AWS Console
+   - Check if containers are running: docker-compose ps
+   - Check EC2 instance is running
+
+3. If MongoDB connection fails:
+   - Check MongoDB logs: docker-compose logs mongodb
+   - Verify network: docker network ls
+
+4. If Redis connection fails:
+   - Check Redis logs: docker-compose logs redis
+   - Test connection: docker exec redis redis-cli ping
+
+
+BACKUP DATA
+-----------
+# Backup MongoDB
+docker exec mongodb mongodump --out /data/backup
+docker cp mongodb:/data/backup ./mongodb-backup
+
+# Backup Redis
+docker exec redis redis-cli BGSAVE
+docker cp redis:/data/dump.rdb ./redis-backup.rdb
+
+
+SECURITY BEST PRACTICES
+------------------------
+1. Restrict SSH access to your IP only
+2. Use strong passwords for MongoDB/Redis in production
+3. Enable HTTPS with SSL certificates
+4. Regular security updates: sudo yum update -y
+5. Monitor logs regularly
+6. Backup data frequently
+7. Use AWS IAM roles for better security
+
+
+COST OPTIMIZATION
+-----------------
+1. Use t2.micro for testing (free tier)
+2. Stop instance when not in use
+3. Use Reserved Instances for production
+4. Monitor with AWS CloudWatch
+5. Set up billing alerts
+
+
+NEXT STEPS
+----------
+1. Set up domain name (Route 53)
+2. Configure HTTPS with Let's Encrypt
+3. Set up Nginx reverse proxy
+4. Configure automated backups
+5. Set up monitoring and alerts
+6. Implement CI/CD pipeline
+
+
+SUPPORT
+-------
+If you encounter issues:
+1. Check logs: docker-compose logs
+2. Verify Security Groups in AWS Console
+3. Check EC2 instance status
+4. Review this guide again
+
+========================================

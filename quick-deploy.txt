@@ -1,0 +1,43 @@
+========================================
+QUICK DEPLOYMENT CHECKLIST
+========================================
+
+□ STEP 1: Launch EC2 Instance
+  - AMI: Amazon Linux 2023 or Ubuntu 22.04
+  - Instance Type: t2.medium (or t2.micro for testing)
+  - Security Group Ports: 22, 3000, 5000
+
+□ STEP 2: Download Key Pair (.pem file)
+
+□ STEP 3: Connect to EC2
+  ssh -i your-key.pem ec2-user@YOUR_EC2_IP
+
+□ STEP 4: Upload Files (from local machine)
+  scp -i your-key.pem -r * ec2-user@YOUR_EC2_IP:~/app/
+
+□ STEP 5: Run Deployment Script (on EC2)
+  cd ~/app
+  chmod +x deploy-ec2.sh
+  ./deploy-ec2.sh
+
+□ STEP 6: Logout and Login Again
+  exit
+  ssh -i your-key.pem ec2-user@YOUR_EC2_IP
+
+□ STEP 7: Start Application
+  cd ~/app
+  docker-compose up -d
+
+□ STEP 8: Access Application
+  http://YOUR_EC2_IP:3000
+
+========================================
+SECURITY GROUP RULES
+========================================
+
+Type         Port    Source      Description
+SSH          22      Your IP     SSH access
+Custom TCP   3000    0.0.0.0/0   Frontend
+Custom TCP   5000    0.0.0.0/0   Backend API
+
+========================================

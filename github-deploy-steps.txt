@@ -1,0 +1,58 @@
+========================================
+GITHUB DEPLOYMENT STEPS
+========================================
+
+STEP 1: LOCAL MACHINE - Create Git Repository
+----------------------------------------------
+cd "C:\Users\Prashant trivedi\Downloads\docker-compose-aws-ec2"
+
+git init
+git add .
+git commit -m "Initial commit - 4-tier docker app"
+
+
+STEP 2: LOCAL MACHINE - Push to GitHub
+---------------------------------------
+# Create new repository on GitHub (github.com)
+# Repository name: docker-compose-aws-ec2
+# Keep it Public or Private
+
+# Then run:
+git remote add origin https://github.com/YOUR_USERNAME/docker-compose-aws-ec2.git
+git branch -M main
+git push -u origin main
+
+
+STEP 3: EC2 - Clone Repository
+-------------------------------
+# On EC2 terminal:
+cd ~
+git clone https://github.com/YOUR_USERNAME/docker-compose-aws-ec2.git app
+cd app
+
+
+STEP 4: EC2 - Install Docker
+-----------------------------
+chmod +x deploy-ubuntu.sh
+./deploy-ubuntu.sh
+
+
+STEP 5: EC2 - Logout and Login
+-------------------------------
+exit
+
+# Then SSH again:
+ssh -i your-key.pem ubuntu@YOUR_EC2_PUBLIC_IP
+
+
+STEP 6: EC2 - Start Application
+--------------------------------
+cd ~/app
+docker-compose up -d
+
+
+STEP 7: Access Application
+---------------------------
+http://YOUR_EC2_PUBLIC_IP:3000
+
+========================================
